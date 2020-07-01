@@ -18,13 +18,13 @@ def updateT():
     T = T0*(1+alpha*((Q/C)**beta))
 
 
-def updateQ(CQ, P):
+def updateQ(COD, P):
     for i in range(m):
         for j in range(m):
             path = P[i, j]
             for k in range(len(path)-1):
                 s, t = path[k], path[k+1]
-                Q[s, t] += CQ[i, j]
+                Q[s, t] += COD[i, j]
 
 
 # 分组批次
@@ -32,7 +32,7 @@ n = 10
 
 for i in range(n):
     _, P = Floyd(T)
-    updateQ(Q/n, P)
+    updateQ(OD/n, P)
     updateT()
 
 print(Q)
