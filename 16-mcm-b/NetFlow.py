@@ -13,23 +13,23 @@ alpha,beta = 1,4
 T = np.copy(T0)
 Q = np.zeros(T0)
 
-# 分组批次    
-n = 10
-
 def updateT():
     T = T0*(1+alpha*((Q/C)**beta))
 
-def updateQ(spm):
+def updateQ(cq,spm):
     for i in range(m):
         for j in range(m):
             path = spm[i,j]
             for k in range(len(path)-1):
                 s,t = path[k],path[k+1]
-                Q[s,t] += odm[i,j]/n
+                Q[s,t] += cq[i,j]
+
+# 分组批次    
+n = 10
 
 for i in range(n):
     dis,spm = Floyd(T)
-    updateQ(spm)
+    updateQ(Q/n,spm)
     updateT()
 
 print(Q)
