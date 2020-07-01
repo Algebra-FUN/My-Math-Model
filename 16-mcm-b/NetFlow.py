@@ -4,7 +4,7 @@ import numpy as np
 inf = float('inf')
 
 
-def netflow(OD, T0, C, n=100, alpha=1, beta=2):
+def netflow(OD, T0, C, n=100, alpha=1, beta=.5):
     m = len(T0)
 
     # 初始化
@@ -28,7 +28,7 @@ def netflow(OD, T0, C, n=100, alpha=1, beta=2):
         updateQ(OD/n, P)
         T = updateT()
 
-    return Q, T
+    return Q, T, T/T0 - 1
 
 
 if __name__ == "__main__":
@@ -40,9 +40,9 @@ if __name__ == "__main__":
         [inf, inf, inf, inf]
     ])
     OD = np.array([
-        [0, 0, 0, 1000],
+        [0, 200, 0, 1000],
         [0, 0, 0, 0],
-        [0, 0, 0, 0],
+        [0, 0, 0, 200],
         [0, 0, 0, 0]
     ])
     C = np.array([
@@ -52,26 +52,37 @@ if __name__ == "__main__":
         [1, 1, 1, 1]
     ])
 
-    def evalue(Q,T):
+
+    def evalue(Q, T, J):
         RT = T[(T != inf)]
         QT = (Q*T).flatten()
         QT = QT[~np.isnan(QT)]
-        J = (T/T0).flatten()
+        J = J.flatten()
         J = J[~np.isnan(J)]
         return {
-            '平均道路通行时间':np.mean(RT),
-            '加权路网通行时耗':np.sum(QT),
-            '路网拥堵指数':np.mean(J)
+            '平均道路通行时间': np.mean(RT),
+            '加权路网通行时耗': np.sum(QT),
+            '路网拥堵指数': np.mean(np.log(J))
         }
 
     print('增加道路1-4之前:')
-    Q, T = netflow(OD,T0,C)
+    Q, T, J = netflow(OD, T0, C)
     print('Q=', Q)
-    print('evalue=',evalue(Q,T))
+    print('J=', J)
+    eval0 = evalue(Q, T, J)
+    print('evalue=', eval0)
 
     print('增加道路1-4之后:')
-    T0[0,3] = 1.5
-    C[0,3] = 100
-    Q, T = netflow(OD,T0,C)
+    T0[0, 3] = 1.5
+    C[0, 3] = 75
+    Q, T, J = netflow(OD, T0, C)
     print('Q=', Q)
-    print('evalue=',evalue(Q,T))
+    print('J=', J)
+    eval1 = evalue(Q, T, J)
+    print('evalue=', eval1)
+
+    def eval_enhance(eval0,eval1):
+        for (k, v0), (_, v1) in zip(eval0.items(), eval1.items()):
+            print(f'{k} 提高：{(v0-v1)/v0*100}%')
+    print('网络提升效果：')
+    eval_enhance(eval0,eval1)
