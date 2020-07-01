@@ -4,7 +4,7 @@ import numpy as np
 inf = float('inf')
 
 
-def netflow(OD, T0, C, n=30, alpha=1, beta=2):
+def netflow(OD, T0, C, n=100, alpha=1, beta=2):
     m = len(T0)
 
     # 初始化
@@ -46,27 +46,32 @@ if __name__ == "__main__":
         [0, 0, 0, 0]
     ])
     C = np.array([
-        [1, 500, 100, 100],
+        [1, 500, 100, 1],
         [1, 1, 1, 500],
         [1, 1, 1, 100],
         [1, 1, 1, 1]
     ])
 
-    def evalue(T):
-        sum,i=0,0
-        for v in T.flatten():
-            if v < inf:
-                sum +=v
-                i += 1
-        return sum/i
+    def evalue(Q,T):
+        RT = T[(T != inf)]
+        QT = (Q*T).flatten()
+        QT = QT[~np.isnan(QT)]
+        J = (T/T0).flatten()
+        J = J[~np.isnan(J)]
+        return {
+            '平均道路通行时间':np.mean(RT),
+            '加权路网通行时耗':np.sum(QT),
+            '路网拥堵指数':np.mean(J)
+        }
 
     print('增加道路1-4之前:')
     Q, T = netflow(OD,T0,C)
     print('Q=', Q)
-    print('evalue=',evalue(T))
+    print('evalue=',evalue(Q,T))
 
     print('增加道路1-4之后:')
     T0[0,3] = 1.5
+    C[0,3] = 100
     Q, T = netflow(OD,T0,C)
     print('Q=', Q)
-    print('evalue=',evalue(T))
+    print('evalue=',evalue(Q,T))
